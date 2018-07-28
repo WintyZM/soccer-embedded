@@ -9,45 +9,49 @@
   * @defgroup FreeRTOS FreeRTOS
   * @brief    Everything related to FreeRTOS
   ******************************************************************************
+  * File Name          : freertos.c
+  * Description        : Code for freertos applications
+  ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
+  * USER CODE END. Other portions of this file, whether
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * Copyright (c) 2018 STMicroelectronics International N.V.
   * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without 
+  * Redistribution and use in source and binary forms, with or without
   * modification, are permitted, provided that the following conditions are met:
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
+  * 1. Redistribution of source code must retain the above copyright notice,
   *    this list of conditions and the following disclaimer.
   * 2. Redistributions in binary form must reproduce the above copyright notice,
   *    this list of conditions and the following disclaimer in the documentation
   *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
+  * 3. Neither the name of STMicroelectronics nor the names of other
+  *    contributors to this software may be used to endorse or promote products
   *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
+  * 4. This software, including modifications and/or derivative works of this
   *    software, must execute solely and exclusively on microcontroller or
   *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
+  * 5. Redistribution and use of this software other than as permitted under
+  *    this license is void and will automatically terminate your rights under
+  *    this license.
   *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT
+  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
   * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT
   * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
   * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
   * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  *
   ******************************************************************************
   */
 
@@ -56,7 +60,7 @@
 #include "task.h"
 #include "cmsis_os.h"
 
-/* USER CODE BEGIN Includes */     
+/* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
@@ -74,8 +78,13 @@
 
 /* Variables -----------------------------------------------------------------*/
 osThreadId defaultTaskHandle;
-uint32_t defaultTaskBuffer[ 512 ];
+uint32_t defaultTaskBuffer[ 128 ];
 osStaticThreadDef_t defaultTaskControlBlock;
+
+/* USER CODE BEGIN Variables */
+osThreadId commandTaskHandle;
+uint32_t commandTaskBuffer[ 512 ];
+osStaticThreadDef_t commandTaskControlBlock;
 osThreadId UART1_Handle;
 uint32_t UART1_Buffer[ 128 ];
 osStaticThreadDef_t UART1_ControlBlock;
@@ -92,7 +101,7 @@ osThreadId UART6_Handle;
 uint32_t UART6_Buffer[ 128 ];
 osStaticThreadDef_t UART6_ControlBlock;
 osThreadId IMUTaskHandle;
-uint32_t IMUTaskBuffer[ 512 ];
+uint32_t IMUTaskBuffer[ 128 ];
 osStaticThreadDef_t IMUTaskControlBlock;
 osThreadId rxTaskHandle;
 uint32_t rxTaskBuffer[ 512 ];
@@ -121,7 +130,7 @@ osStaticMessageQDef_t UART_rxControlBlock;
 osMutexId PCUARTHandle;
 osStaticMutexDef_t PCUARTControlBlock;
 
-/* USER CODE BEGIN Variables */
+const double PI = 3.141592654;
 
 enum motorNames {MOTOR1, MOTOR2, MOTOR3, MOTOR4, MOTOR5,
 				 MOTOR6, MOTOR7, MOTOR8, MOTOR9, MOTOR10,
@@ -142,6 +151,11 @@ static volatile uint32_t error;
 
 /* Function prototypes -------------------------------------------------------*/
 void StartDefaultTask(void const * argument);
+
+void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
+
+/* USER CODE BEGIN FunctionPrototypes */
+void StartCommandTask(void const * argument);
 void UART1_Handler(void const * argument);
 void UART2_Handler(void const * argument);
 void UART3_Handler(void const * argument);
@@ -150,10 +164,6 @@ void UART6_Handler(void const * argument);
 void StartIMUTask(void const * argument);
 void StartRxTask(void const * argument);
 void StartTxTask(void const * argument);
-
-void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
-
-/* USER CODE BEGIN FunctionPrototypes */
 
 /* USER CODE END FunctionPrototypes */
 
@@ -165,30 +175,28 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
 /* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
 static StaticTask_t xIdleTaskTCBBuffer;
 static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];
-  
+
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
 {
   *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
   *ppxIdleTaskStackBuffer = &xIdleStack[0];
   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
   /* place for user code */
-}                   
+}
 /* USER CODE END GET_IDLE_TASK_MEMORY */
 
 /* Init FreeRTOS */
 
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-       
-  /* USER CODE END Init */
 
-  /* Create the mutex(es) */
-  /* definition and creation of PCUART */
-  osMutexStaticDef(PCUART, &PCUARTControlBlock);
-  PCUARTHandle = osMutexCreate(osMutex(PCUART));
+  /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
+  /* definition and creation of PCUART */
+  osMutexStaticDef(PCUART, &PCUARTControlBlock);
+  PCUARTHandle = osMutexCreate(osMutex(PCUART));
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -201,8 +209,15 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadStaticDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 512, defaultTaskBuffer, &defaultTaskControlBlock);
+  osThreadStaticDef(defaultTask, StartDefaultTask, osPriorityIdle, 0, 128, defaultTaskBuffer, &defaultTaskControlBlock);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+
+  /* USER CODE BEGIN RTOS_THREADS */
+  /* add threads, ... */
+
+  /* definition and creation of commandTask */
+  osThreadStaticDef(commandTask, StartCommandTask, osPriorityLow, 0, 512, commandTaskBuffer, &commandTaskControlBlock);
+  commandTaskHandle = osThreadCreate(osThread(commandTask), NULL);
 
   /* definition and creation of UART1_ */
   osThreadStaticDef(UART1_, UART1_Handler, osPriorityNormal, 0, 128, UART1_Buffer, &UART1_ControlBlock);
@@ -225,7 +240,7 @@ void MX_FREERTOS_Init(void) {
   UART6_Handle = osThreadCreate(osThread(UART6_), NULL);
 
   /* definition and creation of IMUTask */
-  osThreadStaticDef(IMUTask, StartIMUTask, osPriorityNormal, 0, 512, IMUTaskBuffer, &IMUTaskControlBlock);
+  osThreadStaticDef(IMUTask, StartIMUTask, osPriorityNormal, 0, 128, IMUTaskBuffer, &IMUTaskControlBlock);
   IMUTaskHandle = osThreadCreate(osThread(IMUTask), NULL);
 
   /* definition and creation of rxTask */
@@ -235,12 +250,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of txTask */
   osThreadStaticDef(txTask, StartTxTask, osPriorityHigh, 0, 512, txTaskBuffer, &txTaskControlBlock);
   txTaskHandle = osThreadCreate(osThread(txTask), NULL);
-
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
-  /* Create the queue(s) */
+  /* USER CODE BEGIN RTOS_QUEUES */
+  /* add queues, ... */
   /* definition and creation of UART1_req */
   osMessageQStaticDef(UART1_req, 16, UARTcmd_t, UART1_reqBuffer, &UART1_reqControlBlock);
   UART1_reqHandle = osMessageCreate(osMessageQ(UART1_req), NULL);
@@ -264,12 +277,23 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of UART_rx */
   osMessageQStaticDef(UART_rx, 32, UARTcmd_t, UART_rxBuffer, &UART_rxControlBlock);
   UART_rxHandle = osMessageCreate(osMessageQ(UART_rx), NULL);
-
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
 }
 
+/* StartDefaultTask function */
+void StartDefaultTask(void const * argument)
+{
+
+  /* USER CODE BEGIN StartDefaultTask */
+  /* Infinite loop */
+  for(;;)
+  {
+	osDelay(1);
+  }
+  /* USER CODE END StartDefaultTask */
+}
+
+/* USER CODE BEGIN Application */
 /**
  * @defgroup Threads Threads
  * @brief    These are functions run in the context of their own FreeRTOS
@@ -278,9 +302,9 @@ void MX_FREERTOS_Init(void) {
  * @ingroup  FreeRTOS
  */
 
-/* StartDefaultTask function */
+/* StartCommandTask function */
 /**
-  * @brief  This function is executed in the context of the defaultTask
+  * @brief  This function is executed in the context of the commandTask
   *         thread. It initializes all data structures and peripheral
   *         devices associated with the application, and then assumes
   *         responsibility for distributing commands to the actuators
@@ -289,10 +313,9 @@ void MX_FREERTOS_Init(void) {
   *
   * @ingroup Threads
   */
-void StartDefaultTask(void const * argument)
+void StartCommandTask(void const * argument)
 {
-
-    /* USER CODE BEGIN StartDefaultTask */
+  /* USER CODE BEGIN StartCommandTask */
     Dynamixel_SetIOType(IO_POLL); // Configure IO
 
     Dynamixel_Init(&Motor12, 12, &huart6, GPIOC, GPIO_PIN_8, MX28TYPE);
@@ -460,7 +483,7 @@ void StartDefaultTask(void const * argument)
 
         numIterations++;
     }
-    /* USER CODE END StartDefaultTask */
+  /* USER CODE END StartCommandTask */
 }
 
 /* UART1_Handler function */
@@ -479,7 +502,7 @@ void StartDefaultTask(void const * argument)
   */
 void UART1_Handler(void const * argument)
 {
-    /* USER CODE BEGIN UART1_Handler */
+  /* USER CODE BEGIN UART1_Handler */
     // Here, we use task notifications to block this task from running until a notification
     // is received. This allows one-time setup to complete in a low-priority task.
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
@@ -494,7 +517,7 @@ void UART1_Handler(void const * argument)
         while(xQueueReceive(UART1_reqHandle, &cmdMessage, portMAX_DELAY) != pdTRUE);
         UART_ProcessEvent(&cmdMessage, &dataToSend);
     }
-    /* USER CODE END UART1_Handler */
+  /* USER CODE END UART1_Handler */
 }
 
 /* UART2_Handler function */
@@ -513,7 +536,7 @@ void UART1_Handler(void const * argument)
   */
 void UART2_Handler(void const * argument)
 {
-    /* USER CODE BEGIN UART2_Handler */
+  /* USER CODE BEGIN UART2_Handler */
     // Here, we use task notifications to block this task from running until a notification
     // is received. This allows one-time setup to complete in a low-priority task.
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
@@ -528,7 +551,7 @@ void UART2_Handler(void const * argument)
         while(xQueueReceive(UART2_reqHandle, &cmdMessage, portMAX_DELAY) != pdTRUE);
         UART_ProcessEvent(&cmdMessage, &dataToSend);
     }
-    /* USER CODE END UART2_Handler */
+  /* USER CODE END UART2_Handler */
 }
 
 /* UART3_Handler function */
@@ -547,7 +570,7 @@ void UART2_Handler(void const * argument)
   */
 void UART3_Handler(void const * argument)
 {
-    /* USER CODE BEGIN UART3_Handler */
+  /* USER CODE BEGIN UART3_Handler */
     // Here, we use task notifications to block this task from running until a notification
     // is received. This allows one-time setup to complete in a low-priority task.
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
@@ -562,7 +585,7 @@ void UART3_Handler(void const * argument)
         while(xQueueReceive(UART3_reqHandle, &cmdMessage, portMAX_DELAY) != pdTRUE);
         UART_ProcessEvent(&cmdMessage, &dataToSend);
     }
-    /* USER CODE END UART3_Handler */
+  /* USER CODE END UART3_Handler */
 }
 
 /* UART4_Handler function */
@@ -581,7 +604,7 @@ void UART3_Handler(void const * argument)
   */
 void UART4_Handler(void const * argument)
 {
-    /* USER CODE BEGIN UART4_Handler */
+  /* USER CODE BEGIN UART4_Handler */
     // Here, we use task notifications to block this task from running until a notification
     // is received. This allows one-time setup to complete in a low-priority task.
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
@@ -596,7 +619,7 @@ void UART4_Handler(void const * argument)
         while(xQueueReceive(UART4_reqHandle, &cmdMessage, portMAX_DELAY) != pdTRUE);
         UART_ProcessEvent(&cmdMessage, &dataToSend);
     }
-    /* USER CODE END UART4_Handler */
+  /* USER CODE END UART4_Handler */
 }
 
 /* UART6_Handler function */
@@ -615,7 +638,7 @@ void UART4_Handler(void const * argument)
   */
 void UART6_Handler(void const * argument)
 {
-    /* USER CODE BEGIN UART6_Handler */
+  /* USER CODE BEGIN UART6_Handler */
     // Here, we use task notifications to block this task from running until a notification
     // is received. This allows one-time setup to complete in a low-priority task.
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
@@ -630,7 +653,7 @@ void UART6_Handler(void const * argument)
         while(xQueueReceive(UART6_reqHandle, &cmdMessage, portMAX_DELAY) != pdTRUE);
         UART_ProcessEvent(&cmdMessage, &dataToSend);
     }
-    /* USER CODE END UART6_Handler */
+  /* USER CODE END UART6_Handler */
 }
 
 /* StartIMUTask function */
@@ -647,59 +670,31 @@ void UART6_Handler(void const * argument)
   */
 void StartIMUTask(void const * argument)
 {
-  /* USER CODE BEGIN StartIMUTask */
-  // Here, we use task notifications to block this task from running until a notification
-  // is received. This allows one-time setup to complete in a low-priority task.
-  xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
+    /* USER CODE BEGIN StartIMUTask */
+    // Here, we use task notifications to block this task from running until a notification
+    // is received. This allows one-time setup to complete in a low-priority task.
+    xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
 
-  /* Infinite loop */
-  TXData_t dataToSend;
-  dataToSend.eDataType = eIMUData;
+    /* Infinite loop */
+    TXData_t dataToSend;
+    dataToSend.eDataType = eIMUData;
 
-  uint32_t notification;
+    uint32_t notification;
 
-  MPUFilterType axFilter, ayFilter, azFilter, vxFilter, vyFilter, vzFilter;
-  MPUFilter_init(&axFilter);
-  MPUFilter_init(&ayFilter);
-  MPUFilter_init(&azFilter);
-  MPUFilter_init(&vxFilter);
-  MPUFilter_init(&vyFilter);
-  MPUFilter_init(&vzFilter);
+    for(;;)
+    {
+        do{
+            xTaskNotifyWait(0, NOTIFIED_FROM_TASK, &notification, portMAX_DELAY);
+        }while((notification & NOTIFIED_FROM_TASK) != NOTIFIED_FROM_TASK);
 
-  for(;;)
-  {
-	  do{
-	      xTaskNotifyWait(0, NOTIFIED_FROM_TASK, &notification, portMAX_DELAY);
-	  }while((notification & NOTIFIED_FROM_TASK) != NOTIFIED_FROM_TASK);
+        // Note that it takes < 1 ms total for the sensor to read both accel and gyro
+        MPU6050_Read_Accelerometer_Withoffset_IT(&IMUdata); // Also updates pitch and roll
+        MPU6050_Read_Gyroscope_Withoffset_IT(&IMUdata);
 
-      // Note that it takes < 1 ms total for the sensor to read both accel and gyro
-	  MPU6050_Read_Accelerometer_Withoffset_IT(&IMUdata); // Also updates pitch and roll
-	  MPU6050_Read_Gyroscope_Withoffset_IT(&IMUdata);
-
-	  // Filter
-	  MPUFilter_writeInput(&azFilter, IMUdata._Z_ACCEL);
-	  IMUdata._Z_ACCEL = MPUFilter_readOutput(&azFilter);
-
-	  MPUFilter_writeInput(&ayFilter, IMUdata._Y_ACCEL);
-	  IMUdata._Y_ACCEL = MPUFilter_readOutput(&ayFilter);
-
-	  MPUFilter_writeInput(&axFilter, IMUdata._X_ACCEL);
-	  IMUdata._X_ACCEL = MPUFilter_readOutput(&axFilter);
-
-	  MPUFilter_writeInput(&vzFilter, IMUdata._Z_GYRO);
-	  IMUdata._Z_GYRO = MPUFilter_readOutput(&vzFilter);
-
-	  MPUFilter_writeInput(&vyFilter, IMUdata._Y_GYRO);
-	  IMUdata._Y_GYRO = MPUFilter_readOutput(&vyFilter);
-
-	  MPUFilter_writeInput(&vxFilter, IMUdata._X_GYRO);
-	  IMUdata._X_GYRO = MPUFilter_readOutput(&vxFilter);
-
-	  // Send to TX thread
-	  dataToSend.pData = &IMUdata;
-	  xQueueSend(UART_rxHandle, &dataToSend, 0);
-  }
-  /* USER CODE END StartIMUTask */
+        dataToSend.pData = &IMUdata;
+        xQueueSend(UART_rxHandle, &dataToSend, 0);
+    }
+    /* USER CODE END StartIMUTask */
 }
 
 /* StartRxTask function */
@@ -715,7 +710,7 @@ void StartIMUTask(void const * argument)
   */
 void StartRxTask(void const * argument)
 {
-    /* USER CODE BEGIN StartRxTask */
+  /* USER CODE BEGIN StartRxTask */
     uint8_t robotGoalData[sizeof(RobotGoal)];
     uint8_t *robotGoalDataPtr;
     uint8_t buffRx[92];
@@ -802,7 +797,7 @@ void StartRxTask(void const * argument)
             }
         }
     }
-    /* USER CODE END StartRxTask */
+  /* USER CODE END StartRxTask */
 }
 
 /* StartTxTask function */
@@ -820,7 +815,7 @@ void StartRxTask(void const * argument)
   */
 void StartTxTask(void const * argument)
 {
-    /* USER CODE BEGIN StartTxTask */
+  /* USER CODE BEGIN StartTxTask */
     xTaskNotifyWait(UINT32_MAX, UINT32_MAX, NULL, portMAX_DELAY);
 
     TXData_t receivedData;
@@ -896,10 +891,9 @@ void StartTxTask(void const * argument)
             xTaskNotifyWait(0, NOTIFIED_FROM_TX_ISR, &notification, portMAX_DELAY);
         }while((notification & NOTIFIED_FROM_TX_ISR) != NOTIFIED_FROM_TX_ISR);
     }
-    /* USER CODE END StartTxTask */
+  /* USER CODE END StartTxTask */
 }
 
-/* USER CODE BEGIN Application */
 /**
  * @defgroup Callbacks Callbacks
  * @brief    Callback functions for unblocking FreeRTOS threads which perform
