@@ -4,8 +4,8 @@
   * @author  Robert Fairley
   * @brief   PcInterface testing/mocking data structures, tests and mocks.
   *
-  * @defgroup pc_interface_tests
-  * @brief    The pc_interface_tests module contains the structures required for running tests and mocking, and the tests themselves.
+  * @defgroup pc_interface_test
+  * @brief    The pc_interface_test module contains the structures required for running tests and mocking, and the tests themselves.
   * @{
   *****************************************************************************
   */
@@ -50,7 +50,7 @@ public:
 // This is to make sure protocol is initialized to *something*.
 TEST(PcInterfaceTests, MemberProtocolDefaultInitializesToUDP) {
 	pc_interface::PcInterface pcInterfaceTestObject;
-	ASSERT_EQ(pc_interface::UDP, pcInterfaceTestObject.getProtocol());
+	ASSERT_EQ(pc_interface::PcProtocol::UDP, pcInterfaceTestObject.getProtocol());
 }
 
 TEST(PcInterfaceTests, MemberUdpInterfaceDefaultInitializesToNull) {
@@ -59,7 +59,7 @@ TEST(PcInterfaceTests, MemberUdpInterfaceDefaultInitializesToNull) {
 }
 
 TEST(PcInterfaceTests, MemberUdpInterfaceParameterizedInitializesToNull) {
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	ASSERT_EQ(nullptr, pcInterfaceTestObject.getUdpInterface());
 }
 
@@ -74,8 +74,9 @@ TEST(PcInterfaceTests, MemberUdpInterfaceCanSetAndGet) {
 // initialize and get back the protocol member of PcInterface with
 // all of the values defined in type enum Protocol_e.
 TEST(PcInterfaceTests, MemberProtocolCanInitializeAndGet) {
-	for (int iProtocol = pc_interface::UDP; iProtocol <= pc_interface::USB_UART; iProtocol++) {
-		pc_interface::Protocol_e protocol = (pc_interface::Protocol_e)iProtocol;
+	for (int iProtocol = static_cast<int>(pc_interface::PcProtocol::UDP);
+			iProtocol <= static_cast<int>(pc_interface::PcProtocol::USB_UART); iProtocol++) {
+		pc_interface::PcProtocol protocol = (pc_interface::PcProtocol)iProtocol;
 		pc_interface::PcInterface pcInterfaceTestObject(protocol);
 
 		ASSERT_EQ(protocol, pcInterfaceTestObject.getProtocol());
@@ -98,7 +99,7 @@ TEST(PcInterfaceTests, MemberRxBufferDefaultInitializesToZero) {
 // MemberRxBufferParameterizedInitializesToZero tests that the
 // parameterized constructor initializes the rxBuffer entries to zeroes.
 TEST(PcInterfaceTests, MemberRxBufferParameterizedInitalizesToZero) {
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	uint8_t rxArray [pc_interface::PC_INTERFACE_BUFFER_SIZE];
 	bool success = pcInterfaceTestObject.getRxBuffer(rxArray);
 	ASSERT_TRUE(success);
@@ -124,7 +125,7 @@ TEST(PcInterfaceTests, MemberTxBufferDefaultInitializesToZero) {
 // MemberTxBufferParameterizedInitializesToZero tests that the
 // parameterized constructor initializes the txBuffer entries to zeroes.
 TEST(PcInterfaceTests, MemberTxBufferParameterizedInitalizesToZero) {
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	uint8_t txArray [pc_interface::PC_INTERFACE_BUFFER_SIZE];
 	bool success = pc_interface::PcInterfaceTester::getTxBufferDebug(pcInterfaceTestObject, txArray);
 	ASSERT_TRUE(success);
@@ -164,7 +165,7 @@ TEST(PcInterfaceTests, MockFunctionCallsUdpSetupFailOnBind) {
 	EXPECT_CALL(udpMockInterface, udpBind()).Times(1).WillOnce(Return(false));
 	EXPECT_CALL(udpMockInterface, udpNew()).Times(1).WillOnce(Return(true));
 
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	bool success = pcInterfaceTestObject.setUdpInterface(&udpMockInterface);
 	ASSERT_TRUE(success);
 	success = pcInterfaceTestObject.setup();
@@ -178,7 +179,7 @@ TEST(PcInterfaceTests, MockFunctionCallsUdpReceive) {
 	EXPECT_CALL(udpMockInterface, waitRecv()).Times(1);
 	EXPECT_CALL(udpMockInterface, ethernetifInput()).Times(1);
 
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	bool success = pcInterfaceTestObject.setUdpInterface(&udpMockInterface);
 	ASSERT_TRUE(success);
 	success = pcInterfaceTestObject.receive();
@@ -193,7 +194,7 @@ TEST(PcInterfaceTests, MockFunctionCallsUdpTransmit) {
 	EXPECT_CALL(udpMockInterface, udpConnect()).Times(1);
 	EXPECT_CALL(udpMockInterface, bytesToPacket(_)).Times(1);
 
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::UDP);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::UDP);
 	bool success = pcInterfaceTestObject.setUdpInterface(&udpMockInterface);
 	ASSERT_TRUE(success);
 	success = pcInterfaceTestObject.transmit();
@@ -206,7 +207,7 @@ TEST(PcInterfaceTests, MemberFunctionSetUdpInterfaceFailsOnNull) {
 }
 
 TEST(PcInterfaceTests, MemberFunctionSetUdpInterfaceFailsOnNotUDP) {
-	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::USB_UART);
+	pc_interface::PcInterface pcInterfaceTestObject(pc_interface::PcProtocol::USB_UART);
 	MockUdpInterface udpMockInterface;
 	ASSERT_FALSE(pcInterfaceTestObject.setUdpInterface(&udpMockInterface));
 }

@@ -19,6 +19,12 @@
 
 namespace udp_interface {
 
+// TODO: one concern with using this sort of interface is that the
+// child class of one of these function calls is resolved at runtime,
+// not compile time, which probably does not meet the determinism required
+// for an embedded system. To get this to work with gmock, probably have to
+// use templating rather than an intermediate virtual class.
+
 // Interface the application with framework-dependent UDP networking code.
 // Extend this interface as the need arises with virtual functions
 // and generic parameters. Then, implement the UDP code

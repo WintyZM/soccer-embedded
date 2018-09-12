@@ -45,7 +45,7 @@ public:
 	bool pbufFreeRx();
 	bool pbufFreeTx();
 	bool waitRecv();
-	bool packetToBytes(uint8_t *_byteArray);
+	bool packetToBytes(uint8_t *_byteArray); // TODO: make this and other methods const
 	bool bytesToPacket(const uint8_t *_byteArray);
 
 	// Helpers

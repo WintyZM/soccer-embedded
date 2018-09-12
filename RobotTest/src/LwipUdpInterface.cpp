@@ -20,76 +20,75 @@
 
 // TODO: doxygen documentation for functions once complete
 
+namespace lwip_udp_interface {
+
 // FIXME: use correct networking stack types in callback function.
 void recvCallback(void *arg, void *pcb, void *p,
 		const void *addr, int port);
 
-lwip_udp_interface::LwipUdpInterface::LwipUdpInterface() {
+LwipUdpInterface::LwipUdpInterface() {
 
 }
 
-lwip_udp_interface::LwipUdpInterface::~LwipUdpInterface() {
+LwipUdpInterface::~LwipUdpInterface() {
 
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpNew() {
+bool LwipUdpInterface::udpNew() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpBind() {
+bool LwipUdpInterface::udpBind() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpRecv() {
+bool LwipUdpInterface::udpRecv() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpRemove() {
+bool LwipUdpInterface::udpRemove() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::ethernetifInput() {
+bool LwipUdpInterface::ethernetifInput() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpConnect() {
+bool LwipUdpInterface::udpConnect() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpSend() {
+bool LwipUdpInterface::udpSend() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::udpDisconnect() {
+bool LwipUdpInterface::udpDisconnect() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::pbufFreeRx() {
+bool LwipUdpInterface::pbufFreeRx() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::pbufFreeTx() {
+bool LwipUdpInterface::pbufFreeTx() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::waitRecv() {
+bool LwipUdpInterface::waitRecv() {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::packetToBytes(uint8_t *_byteArray) {
+bool LwipUdpInterface::packetToBytes(uint8_t *_byteArray) {
 	return true;
 }
 
-bool lwip_udp_interface::LwipUdpInterface::bytesToPacket(const uint8_t *_byteArray) {
+bool LwipUdpInterface::bytesToPacket(const uint8_t *_byteArray) {
 	return true;
 }
 
-void lwip_udp_interface::LwipUdpInterface::setRecvCallbackPbuf(void* _recvCallbackPbuf) {
+void LwipUdpInterface::setRecvCallbackPbuf(void* _recvCallbackPbuf) {
 	recvCallbackPbuf = _recvCallbackPbuf;
 }
-
-// Note: not surrounding this in namespace in order to
-// make available to member functions above.
 
 void recvCallback(void *arg, void *pcb, void *p,
 		const void *addr, int port) {
@@ -98,6 +97,8 @@ void recvCallback(void *arg, void *pcb, void *p,
 	lwipUdpInterfaceCaller->setRecvCallbackPbuf(p);
 	// TODO: release recvSemaphore
 }
+
+} // end namespace lwip_udp_interface
 
 /**
  * @}
