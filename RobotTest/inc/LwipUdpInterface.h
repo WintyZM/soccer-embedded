@@ -1,14 +1,14 @@
 /**
-  *****************************************************************************
-  * @file    LwipUdpInterface.h
-  * @author  Robert Fairley
-  * @brief   Defines the interface through which UDP and required Lwip network stack data/functions will be accessed.
-  *
-  * @defgroup Header
-  * @ingroup  lwip_udp_interface
-  * @{
-  *****************************************************************************
-  */
+ *****************************************************************************
+ * @file    LwipUdpInterface.h
+ * @author  Robert Fairley
+ * @brief   Defines the interface through which UDP and required Lwip network stack data/functions will be accessed.
+ *
+ * @defgroup Header
+ * @ingroup  lwip_udp_interface
+ * @{
+ *****************************************************************************
+ */
 
 #ifndef __LWIP_UDP_INTERFACE_H__
 #define __LWIP_UDP_INTERFACE_H__
@@ -27,44 +27,44 @@ namespace lwip_udp_interface {
 // called.
 // Another approach rather than having stateful members is to pass a
 // void* to every interface function, and pass data as needed into there.
-class LwipUdpInterface : public udp_interface::UdpInterface {
+class LwipUdpInterface: public udp_interface::UdpInterface {
 public:
-	LwipUdpInterface();
-	// TODO: parameterized constructor.
-	~LwipUdpInterface();
+    LwipUdpInterface();
+    // TODO: parameterized constructor.
+    ~LwipUdpInterface();
 
-	// Abstract UdpInterface class overrides.
-	bool udpNew();
-	bool udpBind();
-	bool udpRecv();
-	bool udpRemove();
-	bool ethernetifInput();
-	bool udpConnect();
-	bool udpSend();
-	bool udpDisconnect();
-	bool pbufFreeRx();
-	bool pbufFreeTx();
-	bool waitRecv();
-	bool packetToBytes(uint8_t *_byteArray); // TODO: make this and other methods const
-	bool bytesToPacket(const uint8_t *_byteArray);
+    // Abstract UdpInterface class overrides.
+    bool udpNew();
+    bool udpBind();
+    bool udpRecv();
+    bool udpRemove();
+    bool ethernetifInput();
+    bool udpConnect();
+    bool udpSend();
+    bool udpDisconnect();
+    bool pbufFreeRx();
+    bool pbufFreeTx();
+    bool waitRecv();
+    bool packetToBytes(uint8_t *_byteArray); // TODO: make this and other methods const
+    bool bytesToPacket(const uint8_t *_byteArray);
 
-	// Helpers
-	void setRecvCallbackPbuf(void* _recvCallbackPbuf);
+    // Helpers
+    void setRecvCallbackPbuf(void* _recvCallbackPbuf);
 private:
-	// FIXME: These need to be of the right types for the networking stack.
-	const int *pcb = nullptr;
-	const int *ipaddr = nullptr;
-	const int *ipaddrPc = nullptr;
-	const int port = 0;
-	const int portPc = 0;
-	const int *netif = nullptr;
-	const int *recvSemaphore = nullptr;
+    // FIXME: These need to be of the right types for the networking stack.
+    const int *pcb = nullptr;
+    const int *ipaddr = nullptr;
+    const int *ipaddrPc = nullptr;
+    const int port = 0;
+    const int portPc = 0;
+    const int *netif = nullptr;
+    const int *recvSemaphore = nullptr;
 
-	// Set by recvCallback.
-	void *recvCallbackPbuf = nullptr;
+    // Set by recvCallback.
+    void *recvCallbackPbuf = nullptr;
 
-	int *txPbuf = nullptr;
-	// TODO: synchronize access to pbufs
+    int *txPbuf = nullptr;
+    // TODO: synchronize access to pbufs
 };
 
 } // end namespace lwip_udp_interface

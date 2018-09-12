@@ -1,17 +1,16 @@
 /**
-  *****************************************************************************
-  * @file    UdpInterface.h
-  * @author  Robert Fairley
-  * @brief   Defines an abstract interface of UDP networking functions, to be implemented and extended as needed, e.g. by hardware-facing classes, test frameworks.
-  *
-  * @defgroup Header
-  * @defgroup  udp_interface
-  * @{
-  *****************************************************************************
-  */
+ *****************************************************************************
+ * @file    UdpInterface.h
+ * @author  Robert Fairley
+ * @brief   Defines an abstract interface of UDP networking functions, to be implemented and extended as needed, e.g. by hardware-facing classes, test frameworks.
+ *
+ * @defgroup Header
+ * @defgroup  udp_interface
+ * @{
+ *****************************************************************************
+ */
 
 // NOTE: defgroup used above since there is no .cpp file associated with this class.
-
 #ifndef __UDP_INTERFACE_H__
 #define __UDP_INTERFACE_H__
 
@@ -36,20 +35,21 @@ namespace udp_interface {
 // err_t.
 class UdpInterface {
 public:
-	virtual ~UdpInterface() {}
-	virtual bool udpNew() = 0;
-	virtual bool udpBind() = 0;
-	virtual bool udpRecv() = 0;
-	virtual bool udpRemove() = 0;
-	virtual bool ethernetifInput() = 0;
-	virtual bool udpConnect() = 0;
-	virtual bool udpSend() = 0;
-	virtual bool udpDisconnect() = 0;
-	virtual bool pbufFreeRx() = 0;
-	virtual bool pbufFreeTx() = 0;
-	virtual bool waitRecv() = 0;
-	virtual bool packetToBytes(uint8_t *_byteArray) = 0;
-	virtual bool bytesToPacket(const uint8_t *_byteArray) = 0;
+    virtual ~UdpInterface() {
+    }
+    virtual bool udpNew() = 0;
+    virtual bool udpBind() = 0;
+    virtual bool udpRecv() = 0;
+    virtual bool udpRemove() = 0;
+    virtual bool ethernetifInput() = 0;
+    virtual bool udpConnect() = 0;
+    virtual bool udpSend() = 0;
+    virtual bool udpDisconnect() = 0;
+    virtual bool pbufFreeRx() = 0;
+    virtual bool pbufFreeTx() = 0;
+    virtual bool waitRecv() = 0;
+    virtual bool packetToBytes(uint8_t *_byteArray) = 0;
+    virtual bool bytesToPacket(const uint8_t *_byteArray) = 0;
 };
 
 } // end namespace udp_interface
