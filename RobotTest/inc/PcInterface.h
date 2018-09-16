@@ -21,7 +21,6 @@
 namespace pc_interface {
 
 // These constants should be available outside this file.
-// constexpr here TODO?
 constexpr int PC_INTERFACE_BUFFER_SIZE = 1024;
 constexpr int PC_INTERFACE_PROTOCOL_ENUM_START_MAGIC = 5656;
 
@@ -210,8 +209,6 @@ template<class UdpInterface> bool PcInterfaceTester::getTxBufferDebug(
 }
 
 } // end namespace pc_interface
-
-//#include "../src/PcInterface.cpp"
 
 /**
  * @}
