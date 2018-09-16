@@ -146,7 +146,8 @@ template<class UdpInterface> bool PcInterface<UdpInterface>::transmit() {
     }
 }
 
-// NOTE: Consider using <array> to allow arrays of variable length < PC_INTERFACE_BUFFER_SIZE to be input.
+// NOTE: Consider using <array> to allow arrays of variable length < PC_INTERFACE_BUFFER_SIZE to be input. Also thinking about just
+// adding another parameter for array size for these functions to avoid including another dependency.
 // TODO: should detect if input array is too small for what the buffer has to give, and pass the error up (return false)
 
 // getRxBuffer deep copies all elements, out of rxBuffer to _rxArray.
