@@ -76,16 +76,16 @@ bool LwipUdpInterface::waitRecv() {
     return true;
 }
 
-bool LwipUdpInterface::packetToBytes(uint8_t *_byteArray) {
+bool LwipUdpInterface::packetToBytes(uint8_t *byteArrayOut) const {
     return true;
 }
 
-bool LwipUdpInterface::bytesToPacket(const uint8_t *_byteArray) {
+bool LwipUdpInterface::bytesToPacket(const uint8_t *byteArrayIn) {
     return true;
 }
 
-void LwipUdpInterface::setRecvCallbackPbuf(void* _recvCallbackPbuf) {
-    recvCallbackPbuf = _recvCallbackPbuf;
+void LwipUdpInterface::setRecvCallbackPbuf(void* recvCallbackPbufIn) {
+    recvCallbackPbuf = recvCallbackPbufIn;
 }
 
 void recvCallback(void *arg, void *pcb, void *p, const void *addr, int port) {

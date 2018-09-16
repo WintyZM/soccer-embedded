@@ -15,6 +15,8 @@
 
 #include <cstdint>
 
+ // TODO: make things in this class const where possible
+
 namespace lwip_udp_interface {
 
 // LwipUdpInterface is the real i.e. hardware-facing implementation of the
@@ -45,11 +47,11 @@ public:
     bool pbufFreeRx();
     bool pbufFreeTx();
     bool waitRecv();
-    bool packetToBytes(uint8_t *_byteArray); // TODO: make this and other methods const
-    bool bytesToPacket(const uint8_t *_byteArray);
+    bool packetToBytes(uint8_t *byteArrayOut) const;
+    bool bytesToPacket(const uint8_t *byteArrayIn);
 
     // Helpers
-    void setRecvCallbackPbuf(void* _recvCallbackPbuf);
+    void setRecvCallbackPbuf(void* recvCallbackPbufIn);
 private:
     // FIXME: These need to be of the right types for the networking stack.
     const int *pcb = nullptr;

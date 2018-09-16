@@ -32,15 +32,15 @@ template<class UdpInterface>
 class PcInterface {
 public:
     PcInterface();
-    PcInterface(PcProtocol _protocol);
+    PcInterface(PcProtocol protocolIn);
     ~PcInterface();
     bool setup();
     bool receive();
     bool transmit();
-    bool getRxBuffer(uint8_t *_rxArray) const;
-    bool setTxBuffer(const uint8_t *_txArray);
+    bool getRxBuffer(uint8_t *rxArrayOut) const;
+    bool setTxBuffer(const uint8_t *txArrayIn);
     PcProtocol getProtocol();
-    bool setUdpInterface(UdpInterface *_udpInterface);
+    bool setUdpInterface(UdpInterface *udpInterfaceIn);
     UdpInterface* getUdpInterface() const;
 
     // PcInterfaceTester implements functions that need access to private members
@@ -64,19 +64,19 @@ public:
     template<class UdpInterface>
     static bool setRxBufferDebug(
             pc_interface::PcInterface<UdpInterface> &pcInterfaceUnderTest,
-            const uint8_t *_rxArray);
+            const uint8_t *rxArrayIn);
     template<class UdpInterface>
     static bool getTxBufferDebug(
             const pc_interface::PcInterface<UdpInterface> &pcInterfaceUnderTest,
-            uint8_t *_txArray);
+            uint8_t *txArrayOut);
 };
 
 template<class UdpInterface> PcInterface<UdpInterface>::PcInterface() {
     // No need to initialize any members here; this is done in PcInterface.h
 }
 
-template<class UdpInterface> PcInterface<UdpInterface>::PcInterface(PcProtocol _protocol) :
-        protocol(_protocol) {
+template<class UdpInterface> PcInterface<UdpInterface>::PcInterface(PcProtocol protocolIn) :
+        protocol(protocolIn) {
     // No need to initialize any members here; this is done in PcInterface.h
 }
 
@@ -152,18 +152,18 @@ template<class UdpInterface> bool PcInterface<UdpInterface>::transmit() {
 
 // getRxBuffer deep copies all elements, out of rxBuffer to _rxArray.
 // _rxArray must have length == PC_INTERFACE_BUFFER_SIZE.
-template<class UdpInterface> bool PcInterface<UdpInterface>::getRxBuffer(uint8_t *_rxArray) const {
+template<class UdpInterface> bool PcInterface<UdpInterface>::getRxBuffer(uint8_t *rxArrayOut) const {
     for (int iRxBuffer = 0; iRxBuffer < PC_INTERFACE_BUFFER_SIZE; iRxBuffer++) {
-        _rxArray[iRxBuffer] = rxBuffer[iRxBuffer];
+        rxArrayOut[iRxBuffer] = rxBuffer[iRxBuffer];
     }
     return true;
 }
 
 // setTxBuffer deep copies all elements, into txBuffer from _txArray.
 // _txArray must have length == PC_INTERFACE_BUFFER_SIZE.
-template<class UdpInterface> bool PcInterface<UdpInterface>::setTxBuffer(const uint8_t *_txArray) {
+template<class UdpInterface> bool PcInterface<UdpInterface>::setTxBuffer(const uint8_t *txArrayIn) {
     for (int iTxArray = 0; iTxArray < PC_INTERFACE_BUFFER_SIZE; iTxArray++) {
-        txBuffer[iTxArray] = _txArray[iTxArray];
+        txBuffer[iTxArray] = txArrayIn[iTxArray];
     }
     return true;
 }
@@ -172,14 +172,14 @@ template<class UdpInterface> PcProtocol PcInterface<UdpInterface>::getProtocol()
     return protocol;
 }
 
-template<class UdpInterface> bool PcInterface<UdpInterface>::setUdpInterface(UdpInterface *_udpInterface) {
+template<class UdpInterface> bool PcInterface<UdpInterface>::setUdpInterface(UdpInterface *udpInterfaceIn) {
     if (getProtocol() != PcProtocol::UDP) {
         return false;
     }
-    if (!_udpInterface) {
+    if (!udpInterfaceIn) {
         return false;
     }
-    udpInterface = _udpInterface;
+    udpInterface = udpInterfaceIn;
     return true;
 }
 
@@ -190,20 +190,20 @@ template<class UdpInterface> UdpInterface* PcInterface<UdpInterface>::getUdpInte
 // TODO: should detect if input array is too small for what the buffer has to give, and pass the error up (return false)
 template<class UdpInterface> bool PcInterfaceTester::setRxBufferDebug(
         pc_interface::PcInterface<UdpInterface> &pcInterfaceUnderTest,
-        const uint8_t *_rxArray) {
+        const uint8_t *rxArrayIn) {
     for (int iRxArray = 0; iRxArray < pc_interface::PC_INTERFACE_BUFFER_SIZE;
             iRxArray++) {
-        pcInterfaceUnderTest.rxBuffer[iRxArray] = _rxArray[iRxArray];
+        pcInterfaceUnderTest.rxBuffer[iRxArray] = rxArrayIn[iRxArray];
     }
     return true;
 }
 
 template<class UdpInterface> bool PcInterfaceTester::getTxBufferDebug(
         const pc_interface::PcInterface<UdpInterface> &pcInterfaceUnderTest,
-        uint8_t *_txArray) {
+        uint8_t *txArrayOut) {
     for (int iTxBuffer = 0; iTxBuffer < pc_interface::PC_INTERFACE_BUFFER_SIZE;
             iTxBuffer++) {
-        _txArray[iTxBuffer] = pcInterfaceUnderTest.txBuffer[iTxBuffer];
+        txArrayOut[iTxBuffer] = pcInterfaceUnderTest.txBuffer[iTxBuffer];
     }
     return true;
 }
