@@ -13,7 +13,7 @@
 #ifndef __LWIP_UDP_INTERFACE_H__
 #define __LWIP_UDP_INTERFACE_H__
 
-#include <UdpInterface.h>
+#include <cstdint>
 
 namespace lwip_udp_interface {
 
@@ -27,7 +27,7 @@ namespace lwip_udp_interface {
 // called.
 // Another approach rather than having stateful members is to pass a
 // void* to every interface function, and pass data as needed into there.
-class LwipUdpInterface: public udp_interface::UdpInterface {
+class LwipUdpInterface {
 public:
     LwipUdpInterface();
     // TODO: parameterized constructor.
