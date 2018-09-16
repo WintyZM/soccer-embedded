@@ -10,12 +10,11 @@
  *****************************************************************************
  */
 
-#ifndef __PC_INTERFACE_H__
-#define __PC_INTERFACE_H__
+#ifndef PC_INTERFACE_H
+#define PC_INTERFACE_H
 
 #include <cstdint>
 
-// TODO: variable names to not use _prefix
 // TODO: doxygen documentation for functions once complete
 
 namespace pc_interface {
@@ -215,4 +214,4 @@ template<class UdpInterface> bool PcInterfaceTester::getTxBufferDebug(
  */
 /* end - Header */
 
-#endif /* __PC_INTERFACE__ */
+#endif /* PC_INTERFACE */

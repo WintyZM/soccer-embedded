@@ -10,8 +10,8 @@
  *****************************************************************************
  */
 
-#ifndef __LWIP_UDP_INTERFACE_H__
-#define __LWIP_UDP_INTERFACE_H__
+#ifndef LWIP_UDP_INTERFACE_H
+#define LWIP_UDP_INTERFACE_H
 
 #include <cstdint>
 
@@ -76,4 +76,4 @@ private:
  */
 /* end - Header */
 
-#endif /* __LWIP_UDP_INTERFACE_H__ */
+#endif /* LWIP_UDP_INTERFACE_H */
